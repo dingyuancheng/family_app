@@ -15,7 +15,7 @@ class UserOut(BaseModel):
     id: uuid.UUID
     username: str
     phone: str
-    created_at: datetime
+    create_date: datetime
 
 
 class LoginResponse(BaseModel):

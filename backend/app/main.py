@@ -14,6 +14,6 @@ async def lifespan(_app: FastAPI):
     await engine.dispose()
 
 
-app = FastAPI(title="Family App API", lifespan=lifespan)
+app = FastAPI(title="Family App API", version="0.1.1", lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(users.router)

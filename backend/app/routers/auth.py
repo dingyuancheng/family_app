@@ -10,7 +10,7 @@ from app.security import verify_password
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login", response_model=LoginResponse,responses={401: {"description": "用户名或密码错误"}})
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     stmt = select(User).where(User.username == payload.username)
     result = await db.execute(stmt)
