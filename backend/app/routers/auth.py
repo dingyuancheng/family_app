@@ -1,20 +1,22 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import User
-from app.schemas import LoginRequest, LoginResponse, UserOut
+from app.schemas.auth_schemas import LoginRequest, LoginResponse
+from app.schemas.user_schemas import UserOut
 from app.security import verify_password
+from app.services import user_service
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=LoginResponse,responses={401: {"description": "用户名或密码错误"}})
+@router.post(
+    "/login",
+    response_model=LoginResponse,
+    responses={401: {"description": "用户名或密码错误"}},
+)
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
-    stmt = select(User).where(User.username == payload.username)
-    result = await db.execute(stmt)
-    user: User | None = result.scalar_one_or_none()
+    user = await user_service.get_by_username(db, payload.username)
 
     password_ok = False
     if user and user.password:
