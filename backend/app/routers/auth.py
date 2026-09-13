@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.redis_client import create_session
 from app.schemas.auth_schemas import LoginRequest, LoginResponse
 from app.schemas.user_schemas import UserOut
 from app.security import verify_password
@@ -28,4 +29,11 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
             detail="用户名或密码错误",
         )
 
-    return LoginResponse(message="登录成功", user=UserOut.model_validate(user))
+    user_out = UserOut.model_validate(user)
+    session_id = await create_session(user_out.model_dump(mode="json"))
+
+    return LoginResponse(
+        message="登录成功",
+        session_id=session_id,
+        user=user_out,
+    )

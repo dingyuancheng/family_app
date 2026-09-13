@@ -20,3 +20,9 @@ DATABASE_URL = (
     f"postgresql+asyncpg://{quote_plus(DB_USER)}:{quote_plus(DB_PASSWORD)}"
     f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 )
+
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None) or None
+REDIS_DB = int(os.getenv("REDIS_DB", "0"))
+REDIS_SESSION_TTL = int(os.getenv("REDIS_SESSION_TTL", "86400"))

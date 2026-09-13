@@ -1,0 +1,14 @@
+{
+  "appId": "com.family.app",
+  "appName": "家庭管理",
+  "webDir": "dist",
+  "plugins": {
+    "Camera": {
+      "permissions": ["camera", "photos"]
+    }
+  },
+  "server": {
+    "androidScheme": "capacitor",
+    "cleartext": true
+  }
+}

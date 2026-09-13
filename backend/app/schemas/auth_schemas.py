@@ -10,4 +10,5 @@ class LoginRequest(BaseModel):
 
 class LoginResponse(BaseModel):
     message: str
+    session_id: str
     user: UserOut
