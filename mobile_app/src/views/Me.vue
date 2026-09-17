@@ -35,13 +35,11 @@
 
     <van-dialog v-model:show="openDomainDialog" title="域名配置" show-cancel-button>
       <div class="domain-form">
-        <van-field v-model="domainForm.custom" label="自定义主域名" placeholder="例如 https://family.example.com" />
-        <van-field v-model="domainForm.backup" label="备用域名" placeholder="选填" />
+        <van-field v-model="domainForm.domain" label="服务域名" placeholder="例如 https://family.example.com" />
       </div>
       <template #footer>
         <van-button @click="openDomainDialog = false">取消</van-button>
         <van-button type="primary" @click="saveDomain">保存</van-button>
-        <van-button @click="resetDomain">恢复默认</van-button>
       </template>
     </van-dialog>
   </div>
@@ -52,12 +50,12 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { store, clearAuth } from '@/store'
-import { logout, getServerConfig } from '@/api/auth'
-import { getActiveDomain, initDomains, setCustomDomain, setCustomBackupDomain, clearCustomDomain } from '@/config/domain'
+import { logout } from '@/api/auth'
+import { getActiveDomain, setActiveDomain } from '@/config/domain'
 
 const router = useRouter()
 const openDomainDialog = ref(false)
-const domainForm = reactive({ custom: '', backup: '' })
+const domainForm = reactive({ domain: '' })
 
 const displayDomainShort = computed(() => {
   const d = getActiveDomain()
@@ -77,19 +75,8 @@ const onLogout = async () => {
 }
 
 const saveDomain = () => {
-  if (domainForm.custom) setCustomDomain(domainForm.custom)
-  if (domainForm.backup) setCustomBackupDomain(domainForm.backup)
+  if (domainForm.domain.trim()) setActiveDomain(domainForm.domain.trim())
   showToast('域名已保存')
-  openDomainDialog.value = false
-}
-
-const resetDomain = async () => {
-  clearCustomDomain()
-  try {
-    const cfg = await getServerConfig()
-    if (cfg) initDomains(cfg)
-  } catch { /* ignore */ }
-  showToast('已恢复默认域名')
   openDomainDialog.value = false
 }
 </script>

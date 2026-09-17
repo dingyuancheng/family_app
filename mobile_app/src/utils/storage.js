@@ -1,11 +1,7 @@
 const KEY = {
-  customDomain: 'family_app_custom_domain',
-  customBackupDomain: 'family_app_custom_backup_domain',
   defaultDomain: 'family_app_default_domain',
-  backupDomain: 'family_app_backup_domain',
   sessionId: 'session_id',
   userInfo: 'user_info',
-  theme: 'family_app_theme',
 }
 
 const storage = {

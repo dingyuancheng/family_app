@@ -13,8 +13,6 @@
 import { ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { initStore } from '@/store'
-import { initDomains } from '@/config/domain'
-import { getServerConfig } from '@/api/auth'
 
 const route = useRoute()
 const activeTab = ref(0)
@@ -23,20 +21,13 @@ const showTabbar = ref(true)
 watch(
   () => route.path,
   (path) => {
-    showTabbar.value = !(path === '/webview')
+    showTabbar.value = !(path === '/login' || path === '/webview')
   },
   { immediate: true }
 )
 
-onMounted(async () => {
+onMounted(() => {
   initStore()
-
-  try {
-    const cfg = await getServerConfig()
-    if (cfg) initDomains(cfg)
-  } catch (e) {
-    console.warn('[App] 无法获取 server-config，使用本地存储的域名')
-  }
 })
 </script>
 

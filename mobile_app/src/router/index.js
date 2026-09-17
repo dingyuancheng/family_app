@@ -18,8 +18,6 @@ router.beforeEach((to, from, next) => {
   const loggedIn = !!store.sessionId
   if (to.meta.requiresAuth && !loggedIn) {
     next('/login')
-  } else if (to.path === '/login' && loggedIn) {
-    next('/home')
   } else {
     next()
   }
