@@ -12,7 +12,7 @@ from app.config import (
     REDIS_SESSION_TTL,
 )
 
-KEY_PREFIX = "family_app:session:"
+KEY_PREFIX = "reborn:session:"
 
 _client: Optional[redis.Redis] = None
 

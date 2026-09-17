@@ -21,11 +21,11 @@ class SessionOut(BaseModel):
 @router.get("", response_model=list[SessionOut])
 async def list_sessions(current_user: dict[str, Any] = Depends(require_admin)):
     redis = get_redis()
-    pattern = "family_app:session:*"
+    pattern = "reborn:session:*"
     keys = await redis.keys(pattern)
     sessions: list[SessionOut] = []
     for key in keys:
-        sid = key.replace("family_app:session:", "")
+        sid = key.replace("reborn:session:", "")
         data = await redis.get(key)
         if data:
             payload = json.loads(data)
@@ -44,7 +44,7 @@ async def list_sessions(current_user: dict[str, Any] = Depends(require_admin)):
 @router.delete("/{session_id}")
 async def kick_session(session_id: str, current_user: dict[str, Any] = Depends(require_admin)):
     redis = get_redis()
-    key = f"family_app:session:{session_id}"
+    key = f"reborn:session:{session_id}"
     deleted = await redis.delete(key)
     if not deleted:
         raise HTTPException(status_code=404, detail="会话不存在")

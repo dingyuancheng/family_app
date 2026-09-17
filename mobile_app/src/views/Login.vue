@@ -12,11 +12,11 @@
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
       </div>
-      <h1>家庭管理</h1>
+      <h1>重生系统</h1>
       <div class="sub">
         欢迎回来
         <span class="dot-sep"></span>
-        Family Workspace
+        Reborn System
       </div>
     </div>
 
@@ -75,7 +75,7 @@
       </button>
     </div>
 
-    <div class="footer">FAMILY · WORKSPACE</div>
+    <div class="footer">REBORN · SYSTEM</div>
 
     <Teleport to="body">
       <div v-if="showDomainDialog" class="dlg-mask" @click.self="showDomainDialog = false">

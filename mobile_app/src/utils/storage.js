@@ -1,5 +1,5 @@
 const KEY = {
-  defaultDomain: 'family_app_default_domain',
+  defaultDomain: 'reborn_default_domain',
   sessionId: 'session_id',
   userInfo: 'user_info',
 }

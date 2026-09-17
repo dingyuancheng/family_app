@@ -1,6 +1,6 @@
 {
-  "appId": "com.family.app",
-  "appName": "家庭管理",
+  "appId": "com.reborn.system",
+  "appName": "重生系统",
   "webDir": "dist",
   "plugins": {
     "Camera": {

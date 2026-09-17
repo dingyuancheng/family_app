@@ -1,81 +1,96 @@
 <template>
   <div class="home-page">
+    <div class="grid-bg"></div>
+
     <div class="hero">
       <div class="hero-top">
         <div class="greet">
           <div class="greet-hi">{{ greeting }}，{{ nickname }}</div>
-          <div class="greet-sub">{{ dateText }}</div>
-        </div>
-        <div class="hero-actions">
-          <van-icon name="setting-o" size="22" @click="goMe" />
-        </div>
-      </div>
-
-      <div class="search-wrap">
-        <van-search
-          v-model="searchKeyword"
-          placeholder="搜索功能"
-          shape="round"
-          background="transparent"
-        />
-      </div>
-    </div>
-
-    <div class="body">
-      <div v-if="frequentMenus.length" class="panel frequent-panel">
-        <div class="panel-title">
-          <span class="title-dot"></span>
-          常用功能
-        </div>
-        <div class="frequent-scroll">
-          <div
-            v-for="menu in frequentMenus"
-            :key="menu.id"
-            class="frequent-item"
-            @click="openMenu(menu)"
-          >
-            <div class="frequent-icon">
-              <span class="icon-emoji">{{ menu.icon || '📦' }}</span>
-            </div>
-            <div class="frequent-name">{{ menu.name }}</div>
+          <div class="greet-sub">
+            {{ dateText }}
+            <span class="dot-sep"></span>
+            {{ familyName }}
           </div>
         </div>
       </div>
 
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input
+          v-model="searchKeyword"
+          type="text"
+          class="search-input"
+          placeholder="搜索功能"
+        />
+        <button v-if="searchKeyword" class="search-clear" @click="searchKeyword = ''">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="body">
       <div class="panel">
-        <van-tabs
-          v-model:active="activeCategory"
-          swipeable
-          scrollspy
-          animated
-          line-width="24px"
-          line-height="3px"
-          color="#1677ff"
-          inactive-color="#8a8f99"
-          @change="onCategoryChange"
+        <div class="tabs-row">
+          <button
+            v-for="(cat, idx) in categories"
+            :key="cat.id"
+            type="button"
+            class="tab-btn"
+            :class="{ active: idx === activeCategory }"
+            @click="activeCategory = idx"
+          >
+            {{ cat.name }}
+          </button>
+        </div>
+
+        <div
+          class="menu-grid"
+          @touchstart="onTouchStart"
+          @touchmove="onTouchMove"
+          @touchend="onTouchEnd"
+          @touchcancel="onTouchEnd"
         >
-          <van-tab v-for="cat in categories" :key="cat.id" :title="cat.name">
-            <div class="menu-grid">
-              <template v-if="!searchKeyword">
+          <div class="swipe-track" :style="swipeTrackStyle">
+            <div
+              v-for="(panel, pIdx) in swipePanels"
+              :key="panel.key"
+              class="grid-inner"
+              :style="panelStyle(pIdx)"
+            >
+              <template v-if="panel.mode === 'cat'">
                 <div
-                  v-for="menu in getMenusByCategory(cat.id)"
+                  v-for="menu in getMenusByCategory(categories[panel.index]?.id)"
                   :key="menu.id"
                   class="menu-item"
-                  @click="openMenu(menu)"
+                  @click="!isDragging && openMenu(menu)"
                 >
                   <div class="menu-icon-wrap" :class="getIconBgClass(menu)">
                     <span class="icon-emoji">{{ menu.icon || '📦' }}</span>
                     <span v-if="menu.external === 1" class="external-tag">外链</span>
                   </div>
                   <div class="menu-name">{{ menu.name }}</div>
+                </div>
+                <div v-if="getMenusByCategory(categories[panel.index]?.id).length === 0" class="empty-hint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                  </svg>
+                  <span>暂无功能</span>
                 </div>
               </template>
               <template v-else>
                 <div
-                  v-for="menu in getFilteredMenus(cat.id)"
+                  v-for="menu in filteredAllMenus"
                   :key="menu.id"
                   class="menu-item"
-                  @click="openMenu(menu)"
+                  @click="!isDragging && openMenu(menu)"
                 >
                   <div class="menu-icon-wrap" :class="getIconBgClass(menu)">
                     <span class="icon-emoji">{{ menu.icon || '📦' }}</span>
@@ -83,21 +98,24 @@
                   </div>
                   <div class="menu-name">{{ menu.name }}</div>
                 </div>
-                <van-empty
-                  v-if="getFilteredMenus(cat.id).length === 0 && cat === categories[activeCategory]"
-                  description="未找到匹配的功能"
-                />
+                <div v-if="filteredAllMenus.length === 0" class="empty-hint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <span>未找到匹配的功能</span>
+                </div>
               </template>
             </div>
-          </van-tab>
-        </van-tabs>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { store, setMenuData } from '@/store'
 import { getMyMenus, recordMenuClick } from '@/api/user'
@@ -105,18 +123,22 @@ import { buildMenuUrl } from '@/config/domain'
 import storage, { KEY } from '@/utils/storage'
 
 const ICON_BGS = [
-  'bg-blue', 'bg-orange', 'bg-green', 'bg-purple',
-  'bg-pink', 'bg-teal', 'bg-amber', 'bg-indigo',
+  'bg-sky', 'bg-amber', 'bg-emerald', 'bg-violet',
+  'bg-rose', 'bg-cyan', 'bg-orange', 'bg-indigo',
 ]
 
 const router = useRouter()
 const activeCategory = ref(0)
 const searchKeyword = ref('')
+const isDragging = ref(false)
+const dragOffset = ref(0)
+const trackWidth = ref(0)
+const animating = ref(false)
 
 const nickname = computed(() => store.user?.nickname || store.user?.username || '用户')
 const categories = computed(() => store.categories || [])
 const menus = computed(() => store.menus || [])
-const frequentMenus = computed(() => store.frequentMenus || [])
+const familyName = computed(() => store.familyName || 'Reborn 系统')
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -133,7 +155,122 @@ const dateText = computed(() => {
   return `${d.getMonth() + 1}月${d.getDate()}日 ${weekdays[d.getDay()]}`
 })
 
-const goMe = () => router.push('/me')
+const filteredAllMenus = computed(() => {
+  const kw = searchKeyword.value.trim().toLowerCase()
+  if (!kw) return []
+  return menus.value.filter((m) => m.name.toLowerCase().includes(kw))
+})
+
+const getPanelKey = (catIdx) => {
+  if (searchKeyword.value.trim()) return 'search'
+  if (!categories.value[catIdx]) return 'empty'
+  return 'cat-' + categories.value[catIdx].id
+}
+
+const swipePanels = computed(() => {
+  if (searchKeyword.value.trim()) {
+    return [{ key: 'search', mode: 'search', index: 0, position: 0 }]
+  }
+  const cats = categories.value
+  const cur = activeCategory.value
+  const panels = []
+  if (cur > 0) panels.push({ key: getPanelKey(cur - 1), mode: 'cat', index: cur - 1, position: -1 })
+  panels.push({ key: getPanelKey(cur), mode: 'cat', index: cur, position: 0 })
+  if (cur < cats.length - 1) panels.push({ key: getPanelKey(cur + 1), mode: 'cat', index: cur + 1, position: 1 })
+  return panels
+})
+
+const swipeTrackStyle = computed(() => {
+  const w = trackWidth.value || 1
+  const curIdx = swipePanels.value.findIndex((p) => p.position === 0)
+  const base = -curIdx * w
+  const offset = isDragging.value || animating.value ? dragOffset.value : 0
+  const transition = animating.value ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none'
+  return {
+    transform: `translateX(${base + offset}px)`,
+    transition,
+  }
+})
+
+const panelStyle = (pIdx) => {
+  const w = trackWidth.value || 0
+  return {
+    width: w + 'px',
+    flex: `0 0 ${w}px`,
+  }
+}
+
+const updateTrackWidth = () => {
+  const el = document.querySelector('.menu-grid')
+  if (el) trackWidth.value = el.offsetWidth
+}
+
+let touchStartX = 0
+let touchStartY = 0
+let lockedAxis = null
+
+const onTouchStart = (e) => {
+  if (searchKeyword.value.trim()) return
+  if (!categories.value.length) return
+  if (animating.value) return
+  updateTrackWidth()
+  touchStartX = e.touches[0].clientX
+  touchStartY = e.touches[0].clientY
+  dragOffset.value = 0
+  isDragging.value = true
+  lockedAxis = null
+}
+
+const onTouchMove = (e) => {
+  if (!isDragging.value) return
+  const dx = e.touches[0].clientX - touchStartX
+  const dy = e.touches[0].clientY - touchStartY
+  if (lockedAxis === null) {
+    if (Math.abs(dy) > Math.abs(dx)) {
+      isDragging.value = false
+      return
+    }
+    lockedAxis = 'x'
+  }
+  const w = trackWidth.value
+  const curIdx = activeCategory.value
+  let offset = dx
+  if (curIdx === 0 && dx > 0) offset = dx * 0.3
+  if (curIdx === categories.value.length - 1 && dx < 0) offset = dx * 0.3
+  dragOffset.value = offset
+}
+
+const onTouchEnd = async () => {
+  if (!isDragging.value) return
+  isDragging.value = false
+  const w = trackWidth.value
+  const dx = dragOffset.value
+  const threshold = w * 0.25
+  let targetIdx = activeCategory.value
+  if (dx < -threshold && activeCategory.value < categories.value.length - 1) {
+    targetIdx = activeCategory.value + 1
+  } else if (dx > threshold && activeCategory.value > 0) {
+    targetIdx = activeCategory.value - 1
+  }
+  if (targetIdx !== activeCategory.value) {
+    animating.value = true
+    dragOffset.value = dx
+    await nextTick()
+    setTimeout(() => {
+      dragOffset.value = -(targetIdx - activeCategory.value) * w
+    }, 10)
+    setTimeout(() => {
+      activeCategory.value = targetIdx
+      dragOffset.value = 0
+      animating.value = false
+    }, 320)
+  } else {
+    animating.value = true
+    await nextTick()
+    dragOffset.value = 0
+    setTimeout(() => { animating.value = false }, 320)
+  }
+}
 
 const getIconBgClass = (menu) => {
   const idx = Math.abs(hashStr(menu.name)) % ICON_BGS.length
@@ -150,12 +287,8 @@ function hashStr(s) {
 }
 
 const getMenusByCategory = (catId) => {
+  if (!catId) return []
   return menus.value.filter((m) => String(m.category_id) === String(catId))
-}
-
-const getFilteredMenus = (catId) => {
-  const kw = searchKeyword.value.trim().toLowerCase()
-  return getMenusByCategory(catId).filter((m) => m.name.toLowerCase().includes(kw))
 }
 
 const isAppEnv = () => !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser)
@@ -180,7 +313,7 @@ const openMenu = async (menu) => {
       await window.Capacitor.Plugins.Browser.open({
         url: fullUrl,
         presentationStyle: 'fullscreen',
-        toolbarColor: '#1677ff',
+        toolbarColor: '#0ea5e9',
       })
     } catch (e) {
       console.error('Capacitor Browser 打开失败', e)
@@ -189,16 +322,10 @@ const openMenu = async (menu) => {
   } else {
     router.push({
       name: 'WebView',
-      query: {
-        url: fullUrl,
-        name: menu.name,
-        external: menu.external,
-      },
+      query: { url: fullUrl, name: menu.name, external: menu.external },
     })
   }
 }
-
-const onCategoryChange = () => { /* swipe handled automatically */ }
 
 const loadMenus = async () => {
   try {
@@ -211,22 +338,38 @@ const loadMenus = async () => {
 
 onMounted(async () => {
   await loadMenus()
+  nextTick(() => {
+    updateTrackWidth()
+    window.addEventListener('resize', updateTrackWidth)
+  })
 })
 </script>
 
 <style scoped>
 .home-page {
   min-height: 100vh;
-  padding-bottom: 80px;
-  background: #f5f6f8;
+  padding-bottom: 96px;
+  background: #f5f5f4;
+  position: relative;
+}
+
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse at top, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at top, black 20%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .hero {
-  padding: 52px 20px 24px;
-  background: linear-gradient(135deg, #1677ff 0%, #4096ff 50%, #69b1ff 100%);
-  color: #fff;
-  border-radius: 0 0 28px 28px;
   position: relative;
+  z-index: 2;
+  padding: 56px 28px 20px;
 }
 
 .hero-top {
@@ -236,126 +379,154 @@ onMounted(async () => {
 }
 
 .greet-hi {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
+  letter-spacing: -0.5px;
+  color: #1c1c1e;
   line-height: 1.3;
 }
 
 .greet-sub {
-  font-size: 13px;
-  opacity: 0.8;
-  margin-top: 4px;
+  font-size: 12px;
+  color: #8a8a8e;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
 }
 
-.hero-actions {
-  padding-top: 4px;
-  color: #fff;
+.dot-sep {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  background: #0ea5e9;
+  border-radius: 50%;
+  margin: 0 8px;
 }
 
 .search-wrap {
   margin-top: 20px;
-}
-
-.search-wrap :deep(.van-search) {
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 20px;
-  padding: 4px 14px;
-}
-
-.search-wrap :deep(.van-search__input-wrap) {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 16px;
-  height: 36px;
-}
-
-.search-wrap :deep(.van-search__input) {
-  color: #323233;
-  font-size: 14px;
-}
-
-.search-wrap :deep(.van-search__placeholder) {
-  color: #a4a9b0;
-}
-
-.body {
-  margin-top: -8px;
+  display: flex;
+  align-items: center;
+  height: 46px;
   padding: 0 14px;
-  position: relative;
-  z-index: 1;
+  background: #ffffff;
+  border: 1px solid #e7e5e4;
+  border-radius: 12px;
+  gap: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.search-wrap:focus-within {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
 }
 
-.panel {
-  background: #fff;
-  border-radius: 16px;
-  padding: 14px 10px 8px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-}
-
-.panel-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1f2329;
-  padding: 4px 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.title-dot {
-  width: 4px;
-  height: 16px;
-  border-radius: 2px;
-  background: #1677ff;
-}
-
-.frequent-scroll {
-  display: flex;
-  overflow-x: auto;
-  padding: 4px 4px 8px;
-  gap: 6px;
-  scrollbar-width: none;
-}
-
-.frequent-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.frequent-item {
+.search-icon {
+  width: 15px;
+  height: 15px;
+  color: #b8b5b0;
   flex-shrink: 0;
-  width: 58px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
+}
+.search-wrap:focus-within .search-icon {
+  color: #0ea5e9;
 }
 
-.frequent-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #e8f3ff, #f0f7ff);
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1c1c1e;
+  height: 100%;
+}
+.search-input::placeholder {
+  color: #b8b5b0;
+  font-weight: 400;
+}
+
+.search-clear {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: #e7e5e4;
+  border-radius: 50%;
+  color: #57534e;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+.search-clear svg {
+  width: 12px;
+  height: 12px;
 }
 
-.frequent-name {
-  font-size: 12px;
-  color: #4e5969;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 58px;
-  text-align: center;
+.body {
+  position: relative;
+  z-index: 2;
+  padding: 0 20px;
+}
+
+.panel {
+  background: #ffffff;
+  border: 1px solid #e7e5e4;
+  border-radius: 16px;
+  padding: 16px 14px 10px;
+  margin-bottom: 14px;
+}
+
+.tabs-row {
+  display: flex;
+  gap: 4px;
+  padding: 2px 2px 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid #e7e5e4;
+  margin-bottom: 4px;
+}
+.tabs-row::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: #a8a29e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.tab-btn.active {
+  color: #0ea5e9;
+  font-weight: 600;
+  background: #f0f9ff;
 }
 
 .menu-grid {
+  padding: 10px 2px 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-track {
+  display: flex;
+  flex-direction: row;
+  will-change: transform;
+}
+
+.grid-inner {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px 0;
-  padding: 8px 2px 12px;
+  gap: 4px 0;
+  flex-shrink: 0;
 }
 
 .menu-item {
@@ -363,17 +534,22 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 8px 2px;
+  padding: 10px 2px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.menu-item:active {
+  transform: scale(0.96);
 }
 
 .menu-icon-wrap {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 22px;
   position: relative;
 }
 
@@ -383,29 +559,29 @@ onMounted(async () => {
 
 .external-tag {
   position: absolute;
-  top: -4px;
-  right: -6px;
+  top: -3px;
+  right: -5px;
   font-size: 9px;
   color: #fff;
-  background: #ff7d00;
+  background: #f97316;
   padding: 1px 5px;
-  border-radius: 8px;
+  border-radius: 6px;
   line-height: 1.3;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.bg-blue   { background: linear-gradient(135deg, #e6f4ff, #bae0ff); }
-.bg-orange { background: linear-gradient(135deg, #fff7e6, #ffd591); }
-.bg-green  { background: linear-gradient(135deg, #f6ffed, #d9f7be); }
-.bg-purple { background: linear-gradient(135deg, #f9f0ff, #efdbff); }
-.bg-pink   { background: linear-gradient(135deg, #fff0f6, #ffd6e7); }
-.bg-teal   { background: linear-gradient(135deg, #e6fffb, #b5f5ec); }
-.bg-amber  { background: linear-gradient(135deg, #fffbe6, #ffe58f); }
-.bg-indigo { background: linear-gradient(135deg, #eef0ff, #d4d8ff); }
+.bg-sky     { background: #e0f2fe; }
+.bg-amber   { background: #fef3c7; }
+.bg-emerald { background: #d1fae5; }
+.bg-violet  { background: #ede9fe; }
+.bg-rose    { background: #ffe4e6; }
+.bg-cyan    { background: #cffafe; }
+.bg-orange  { background: #ffedd5; }
+.bg-indigo  { background: #e0e7ff; }
 
 .menu-name {
-  font-size: 12px;
-  color: #4e5969;
+  font-size: 11px;
+  color: #57534e;
   white-space: nowrap;
   max-width: 64px;
   overflow: hidden;
@@ -413,21 +589,19 @@ onMounted(async () => {
   text-align: center;
 }
 
-.panel :deep(.van-tabs) {
-  background: transparent;
+.empty-hint {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 36px 0;
+  color: #d6d3d1;
+  font-size: 12px;
 }
-
-.panel :deep(.van-tabs__wrap) {
-  padding: 0 4px;
-}
-
-.panel :deep(.van-tab) {
-  font-size: 14px;
-  color: #8a8f99;
-  padding: 10px 14px;
-}
-
-.panel :deep(.van-tab--active) {
-  font-weight: 600;
+.empty-hint svg {
+  width: 32px;
+  height: 32px;
 }
 </style>
