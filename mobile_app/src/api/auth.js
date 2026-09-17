@@ -1,9 +1,17 @@
 import request from '@/utils/request'
 
 export function login(data) {
-  return request({
-    url: '/api/auth/login',
-    method: 'post',
-    data
-  })
+  return request({ url: '/api/auth/login', method: 'post', data })
+}
+
+export function logout() {
+  return request({ url: '/api/auth/logout', method: 'post' })
+}
+
+export function me() {
+  return request({ url: '/api/auth/me', method: 'get' })
+}
+
+export function getServerConfig() {
+  return request({ url: '/api/auth/server-config', method: 'get' })
 }

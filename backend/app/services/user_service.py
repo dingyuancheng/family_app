@@ -11,6 +11,6 @@ async def get_by_username(db: AsyncSession, username: str) -> User | None:
 
 
 async def list_all(db: AsyncSession) -> list[User]:
-    stmt = select(User).order_by(User.create_date.desc())
+    stmt = select(User).order_by(User.create_time.desc())
     result = await db.execute(stmt)
     return list(result.scalars().all())

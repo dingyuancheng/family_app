@@ -1,8 +1,43 @@
 <template>
-  <router-view />
+  <div class="app-root">
+    <router-view />
+
+    <van-tabbar v-if="showTabbar" v-model="activeTab" route active-color="#1677ff" inactive-color="#969799">
+      <van-tabbar-item icon="home-o" to="/home">首页</van-tabbar-item>
+      <van-tabbar-item icon="user-o" to="/me">我的</van-tabbar-item>
+    </van-tabbar>
+  </div>
 </template>
 
 <script setup>
+import { ref, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { initStore } from '@/store'
+import { initDomains } from '@/config/domain'
+import { getServerConfig } from '@/api/auth'
+
+const route = useRoute()
+const activeTab = ref(0)
+
+const showTabbar = ref(true)
+watch(
+  () => route.path,
+  (path) => {
+    showTabbar.value = !(path === '/webview')
+  },
+  { immediate: true }
+)
+
+onMounted(async () => {
+  initStore()
+
+  try {
+    const cfg = await getServerConfig()
+    if (cfg) initDomains(cfg)
+  } catch (e) {
+    console.warn('[App] 无法获取 server-config，使用本地存储的域名')
+  }
+})
 </script>
 
 <style>
@@ -18,7 +53,8 @@ body,
   width: 100%;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
-  background-color: #f7f8fa;
+    'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background-color: #f5f6f8;
+  -webkit-tap-highlight-color: transparent;
 }
 </style>
