@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">家庭管理</string>
-    <string name="title_activity_main">家庭管理</string>
-    <string name="package_name">com.family.app</string>
-    <string name="custom_url_scheme">com.family.app</string>
+    <string name="app_name">重生系统</string>
+    <string name="title_activity_main">重生系统</string>
+    <string name="package_name">com.reborn.system</string>
+    <string name="custom_url_scheme">com.reborn.system</string>
 </resources>

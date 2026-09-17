@@ -1,17 +1,7 @@
 <template>
   <div class="login-page">
     <div class="grid"></div>
-    <div class="dot d1"></div>
-    <div class="dot d2"></div>
-    <div class="dot d3"></div>
-
     <div class="header">
-      <div class="mark">
-        <svg viewBox="0 0 24 24">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-      </div>
       <h1>重生系统</h1>
       <div class="sub">
         欢迎回来
@@ -215,45 +205,10 @@ const onSubmit = async () => {
   z-index: 0;
 }
 
-.dot {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: #0ea5e9;
-  border-radius: 50%;
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
-  z-index: 0;
-}
-.dot.d1 { top: 12%; left: 18%; }
-.dot.d2 { top: 55%; right: 15%; }
-.dot.d3 { bottom: 22%; left: 28%; }
-
 .header {
   position: relative;
   z-index: 2;
   padding: 72px 32px 40px;
-}
-
-.header .mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 46px;
-  background: #ffffff;
-  border: 1px solid #e7e5e4;
-  border-radius: 14px;
-  margin-bottom: 32px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-.header .mark svg {
-  width: 22px;
-  height: 22px;
-  fill: none;
-  stroke: #0ea5e9;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .header h1 {
