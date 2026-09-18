@@ -63,6 +63,13 @@
         设置域名
         <span v-if="displayDomain" class="domain-hint">{{ displayDomain }}</span>
       </button>
+
+      <button type="button" class="btn-domain btn-test" @click="testConnection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        测试连接
+      </button>
     </div>
 
     <div class="footer">REBORN · SYSTEM</div>
@@ -112,7 +119,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { showToast } from 'vant'
+import { showToast, showDialog } from 'vant'
 import { login } from '@/api/auth'
 import { setAuth } from '@/store'
 import { getActiveDomain, hasActiveDomain, setActiveDomain } from '@/config/domain'
@@ -141,6 +148,35 @@ onMounted(() => {
 const openDomainDialog = () => {
   domainForm.domain = getActiveDomain() || 'http://192.168.0.6:8000'
   showDomainDialog.value = true
+}
+
+const testConnection = async () => {
+  const domain = getActiveDomain()
+  if (!domain) {
+    showToast('请先配置服务域名')
+    showDomainDialog.value = true
+    return
+  }
+  showToast('正在测试连接...')
+  try {
+    const url = domain.replace(/\/$/, '') + '/api/auth/server-config'
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    })
+    const data = await res.json().catch(() => ({}))
+    await showDialog({
+      title: `连接测试 ${res.ok ? '✅ 成功' : '❌ 失败'}`,
+      message: `请求地址：\n${url}\n\nHTTP 状态：${res.status}\n响应：${JSON.stringify(data).slice(0, 200)}`,
+      showCancelButton: false,
+    })
+  } catch (err) {
+    await showDialog({
+      title: '连接测试 ❌ 失败',
+      message: `请求地址：\n${domain.replace(/\/$/, '') + '/api/auth/server-config'}\n\n错误类型：${err.name || '未知'}\n错误信息：${err.message || err}\n\n提示：请确认手机与电脑在同一 WiFi 下，且后端服务正在运行。`,
+      showCancelButton: false,
+    })
+  }
 }
 
 const saveDomain = () => {
@@ -368,6 +404,21 @@ const onSubmit = async () => {
   border-color: #0ea5e9;
   color: #0ea5e9;
   background: #f0f9ff;
+}
+
+.btn-test {
+  margin-top: 10px;
+  border-color: #0ea5e9;
+  color: #0ea5e9;
+  background: #f0f9ff;
+}
+.btn-test:active {
+  background: #e0f2fe;
+}
+
+.btn-test svg {
+  width: 14px;
+  height: 14px;
 }
 
 .domain-hint {

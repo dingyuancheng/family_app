@@ -9,6 +9,11 @@
   },
   "server": {
     "androidScheme": "capacitor",
-    "cleartext": true
+    "cleartext": true,
+    "hostname": "localhost",
+    "allowNavigation": ["*"]
+  },
+  "android": {
+    "allowMixedContent": true
   }
 }

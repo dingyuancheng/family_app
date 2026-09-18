@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { showToast } from 'vant'
+import { showToast, showDialog } from 'vant'
 import storage, { KEY } from '@/utils/storage'
 import { getActiveDomain } from '@/config/domain'
 import { store } from '@/store'
@@ -37,21 +37,28 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
   (response) => response.data,
-  (error) => {
+  async (error) => {
     const status = error.response?.status
     const detail = error.response?.data?.detail
     const msg = error.message || ''
+    const code = error.code || ''
+    const fullUrl = (error.config?.baseURL || '') + (error.config?.url || '')
 
     console.error('[Request Error]', {
-      url: error.config?.url,
+      url: fullUrl,
       status,
       detail,
       msg,
-      code: error.code,
+      code,
     })
 
     if (error.code === 'ERR_NETWORK' || !error.response) {
-      showToast('网络无法连接到服务器，请检查域名或网络')
+      await showDialog({
+        title: '网络错误',
+        message: `请求地址：\n${fullUrl}\n\n错误码：${code}\n错误信息：${msg}\n\nCapacitor: ${!!window.Capacitor}\n域名: ${getActiveDomain() || '(未设置)'}`,
+        confirmButtonText: '知道了',
+        showCancelButton: false,
+      })
     } else if (status === 401 && !error.config?.url?.includes('/login')) {
       store.sessionId = ''
       store.user = null

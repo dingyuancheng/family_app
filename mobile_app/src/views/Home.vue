@@ -291,8 +291,6 @@ const getMenusByCategory = (catId) => {
   return menus.value.filter((m) => String(m.category_id) === String(catId))
 }
 
-const isAppEnv = () => !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser)
-
 const appendSessionToUrl = (url) => {
   const sid = storage.get(KEY.sessionId) || ''
   if (!sid) return url
@@ -308,22 +306,18 @@ const openMenu = async (menu) => {
   const baseUrl = buildMenuUrl(menu.url, menu.external)
   const fullUrl = menu.external === 0 ? appendSessionToUrl(baseUrl) : baseUrl
 
-  if (isAppEnv()) {
+  const AppWebView = window.Capacitor?.Plugins?.AppWebView
+  const isNative = window.Capacitor?.isNativePlatform?.()
+
+  if (isNative && AppWebView) {
     try {
-      await window.Capacitor.Plugins.Browser.open({
-        url: fullUrl,
-        presentationStyle: 'fullscreen',
-        toolbarColor: '#0ea5e9',
-      })
+      await AppWebView.open({ url: fullUrl, title: menu.name || '' })
     } catch (e) {
-      console.error('Capacitor Browser 打开失败', e)
+      console.warn('AppWebView 打开失败，降级为 WebView', e)
       router.push({ name: 'WebView', query: { url: fullUrl, name: menu.name, external: menu.external } })
     }
   } else {
-    router.push({
-      name: 'WebView',
-      query: { url: fullUrl, name: menu.name, external: menu.external },
-    })
+    router.push({ name: 'WebView', query: { url: fullUrl, name: menu.name, external: menu.external } })
   }
 }
 
